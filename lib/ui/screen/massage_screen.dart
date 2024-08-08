@@ -1,125 +1,116 @@
-import 'package:flutter/material.dart';
-import 'package:vazifa36/model/massage_model.dart';
 
-class MessageScreen extends StatefulWidget {
-  const MessageScreen({super.key});
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:vazifa36/model/contact_model.dart';
+import 'dart:io';
+
+import 'package:vazifa36/ui/widget/chat_item.dart';
+
+class ChatScreen extends StatefulWidget {
+  final ContactModel contact;
+
+  ChatScreen({required this.contact});
 
   @override
-  State<MessageScreen> createState() => _MessageScreenState();
+  _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _MessageScreenState extends State<MessageScreen> {
-  List<MessageModel> messages = [
-    MessageModel(
-      messageId: 1,
-      messageText: "Salom qalaysan",
-      isFile: false,
-      createdTime: DateTime.now().subtract(const Duration(minutes: 1)).toString(),
-      contactId: 2,
-      status: 5,
-    ),
-    MessageModel(
-      messageId: 2,
-      messageText: "Nima gaplar hammasi joyidami",
-      isFile: false,
-      createdTime:
-          DateTime.now().subtract(const Duration(minutes: 5)).toString(),
-      contactId: 2,
-      status: 5,
-    ),
-    // Add more messages here
-  ];
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final List<ChatItem> _messages = [];
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _messages.add(ChatItem(
+          message: image.path,
+          isSentByMe: true,
+          isImage: true,
+        ));
+      });
+    }
+  }
+
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+    if (result != null && result.files.single.path != null) {
+      File file = File(result.files.single.path!);
+      setState(() {
+        _messages.add(ChatItem(
+          message: file.path,
+          isSentByMe: true,
+          isFile: true,
+        ));
+      });
+    }
+  }
+
+  void _sendMessage() {
+    if (_controller.text.isNotEmpty) {
+      setState(() {
+        _messages.add(ChatItem(
+          message: _controller.text,
+          isSentByMe: true,
+        ));
+        _controller.clear();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(188, 7, 29, 94),
-        centerTitle: true,
-        title: const Text(
-          "Messages",
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        title: Text(
+            "${widget.contact.contactName} ${widget.contact.contactLastname}"),
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: messages.length,
+              itemCount: _messages.length,
               itemBuilder: (context, index) {
-                final message = messages[index];
-                final isCurrentUser =
-                    message.contactId == 1; // Assuming 1 is the current user ID
-
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Align(
-                    alignment: isCurrentUser
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color:
-                            isCurrentUser ? Colors.blue : Colors.grey.shade300,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(16),
-                          topRight: const Radius.circular(16),
-                          bottomLeft: isCurrentUser
-                              ? const Radius.circular(16)
-                              : const Radius.circular(0),
-                          bottomRight: isCurrentUser
-                              ? const Radius.circular(0)
-                              : const Radius.circular(16),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            message.messageText,
-                            style: TextStyle(
-                              color:
-                                  isCurrentUser ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _formatTime(message.createdTime),
-                            style: TextStyle(
-                              color: isCurrentUser
-                                  ? Colors.white70
-                                  : Colors.black54,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                return _messages[index];
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.image),
+                  onPressed: _pickImage,
+                ),
+                IconButton(
+                  icon: Icon(Icons.attach_file),
+                  onPressed: _pickFile,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: "Type a message",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatTime(String isoTime) {
-    final dateTime = DateTime.parse(isoTime);
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 60) {
-      return "${difference.inMinutes}m ago";
-    } else if (difference.inHours < 24) {
-      return "${difference.inHours}h ago";
-    } else {
-      return "${difference.inDays}d ago";
-    }
   }
 }

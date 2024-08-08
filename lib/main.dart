@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vazifa36/ui/screen/chat_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ChatScreen(),
+      home: HomeScreen(),
     );
   }
 }

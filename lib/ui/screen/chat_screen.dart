@@ -1,78 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:vazifa36/model/contact_model.dart';
 import 'package:vazifa36/ui/screen/massage_screen.dart';
-import 'package:zoom_tap_animation/zoom_tap_animation.dart';
 
-class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  List<ContactModel> contacts = [
+class _HomeScreenState extends State<HomeScreen> {
+  final List<ContactModel> contacts = [
     ContactModel(
       contactId: 1,
-      contactName: "Jhone",
-      contactLastname: "Jhones",
+      contactName: "Tommy",
+      contactLastname: "Washington",
       isOnlie: true,
       imageUrl:
-          "https://avatars.mds.yandex.net/i?id=53596c735c1076eccb5ca421a9ebe27ac6fbee29-5333204-images-thumbs&n=13",
-      lastOnlineTime: DateTime.now().subtract(const Duration(minutes: 5)),
+          "https://i.pinimg.com/originals/a9/07/50/a90750dfaf62b628428234ea33b74a90.jpg",
+      lastOnlineTime: DateTime.now(),
     ),
     ContactModel(
       contactId: 2,
-      contactName: "Daniel",
-      contactLastname: "Corme",
+      contactName: "Tobby",
+      contactLastname: "Jefersn",
+      isOnlie: false,
+      imageUrl: "https://pngimg.com/uploads/ironman/ironman_PNG66.png",
+      lastOnlineTime: DateTime.now(),
+    ),
+    ContactModel(
+      contactId: 3,
+      contactName: "Jonyy",
+      contactLastname: "Freak",
       isOnlie: false,
       imageUrl:
-          "https://avatars.mds.yandex.net/i?id=53596c735c1076eccb5ca421a9ebe27ac6fbee29-5333204-images-thumbs&n=13",
-      lastOnlineTime: DateTime.now().subtract(const Duration(hours: 1)),
+          "https://image.api.playstation.com/vulcan/ap/rnd/202009/3021/B2aUYFC0qUAkNnjbTHRyhrg3.png",
+      lastOnlineTime: DateTime.now(),
     ),
-    // Add more contacts here
   ];
+
+  late List<ContactModel> filteredContacts;
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredContacts = List.from(contacts);
+    searchController.addListener(_filterContacts);
+  }
+
+  void _filterContacts() {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      filteredContacts = contacts.where((contact) {
+        final fullName =
+            '${contact.contactName} ${contact.contactLastname}'.toLowerCase();
+        return fullName.contains(query);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conversations'),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-          ),
-        ],
+        title: const Text("Contacts"),
+        centerTitle: true,
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              decoration: const InputDecoration(
+                labelText: 'Search Contacts',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
-              itemCount: contacts.length,
+              itemCount: filteredContacts.length,
               itemBuilder: (context, index) {
-                return ZoomTapAnimation(
+                final contact = filteredContacts[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(contact.imageUrl),
+                  ),
+                  title:
+                      Text("${contact.contactName} ${contact.contactLastname}"),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) {
-                          return const MessageScreen();
-                        },
+                        builder: (context) => ChatScreen(contact: contact),
                       ),
                     );
                   },
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(contacts[index].imageUrl),
-                    ),
-                    title: Text(contacts[index].contactName),
-                    subtitle: Text(contacts[index].contactLastname),
-                    trailing: const Text(
-                      "11:02 PM",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
                 );
               },
             ),
@@ -80,17 +112,5 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
     );
-  }
-
-  String _formatLastOnlineTime(DateTime lastOnlineTime) {
-    final now = DateTime.now();
-    final difference = now.difference(lastOnlineTime);
-    if (difference.inMinutes < 60) {
-      return "${difference.inMinutes} minutes ago";
-    } else if (difference.inHours < 24) {
-      return "${difference.inHours} hours ago";
-    } else {
-      return "${difference.inDays} days ago";
-    }
   }
 }
