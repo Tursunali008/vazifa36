@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
       contactId: 3,
       contactName: "Jonyy",
       contactLastname: "Freak",
-      isOnlie: false,
+      isOnlie: true,
       imageUrl:
           "https://image.api.playstation.com/vulcan/ap/rnd/202009/3021/B2aUYFC0qUAkNnjbTHRyhrg3.png",
       lastOnlineTime: DateTime.now(),
